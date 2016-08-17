@@ -2,13 +2,12 @@ package org.opencypher.spark.impl.frame
 
 import org.apache.spark.sql.Dataset
 import org.opencypher.spark.api.CypherType
-import org.opencypher.spark.impl.{FrameVerificationError, PlanningContext, StdCypherFrame, StdFrameSignature}
+import org.opencypher.spark.impl._
+import org.opencypher.spark.impl.util.Verification
 
 import scala.language.postfixOps
 
 object Upcast {
-
-  import org.opencypher.spark.impl.FrameVerification._
 
   def apply[Out](input: StdCypherFrame[Out])(fieldSym: Symbol)(widen: CypherType => CypherType)
                 (implicit context: PlanningContext): StdCypherFrame[Out] = {
@@ -17,10 +16,14 @@ object Upcast {
     val oldType = field.cypherType
     val newType = widen(oldType)
 
-    ifNot(newType `superTypeOf` oldType isTrue) failWith TypeError(oldType, newType)
+    requireIsSuperTypeOf(newType, oldType)
 
     val (_, sig) = input.signature.upcastField(field.sym, newType)
     CypherUpcast[Out](input)(sig)
+  }
+
+  private final case class requireIsSuperTypeOf(newType: CypherType, oldType: CypherType) extends Verification {
+    ifNot(newType `superTypeOf` oldType isTrue) failWith FrameVerification.IsNoSuperTypeOf(newType, oldType)
   }
 
   private final case class CypherUpcast[Out](input: StdCypherFrame[Out])(sig: StdFrameSignature)
@@ -31,9 +34,4 @@ object Upcast {
       out
     }
   }
-
-  protected[frame] final case class TypeError(oldType: CypherType, newType: CypherType)
-    extends FrameVerificationError(
-      s"Expected $oldType to be upcast to a wider type, but $newType is not a super type of $oldType"
-    )
 }

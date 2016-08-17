@@ -6,12 +6,11 @@ import org.apache.spark.sql.Dataset
 import org.opencypher.spark.api._
 import org.opencypher.spark.api.types._
 import org.opencypher.spark.impl._
+import org.opencypher.spark.impl.util.Verification
 
 import scala.language.postfixOps
 
 object Extract {
-
-  import FrameVerification._
 
   def relationshipStartId(input: StdCypherFrame[Product])(relationship: Symbol)(output: Symbol)
                          (implicit context: PlanningContext): ProjectFrame = {
@@ -62,10 +61,10 @@ object Extract {
     new Extract[CypherAnyMap](input)(mapField, propertyValue(propertyKey), outputField)(signature)
   }
 
-  private def requireMaterialType(field: StdField, typ: MaterialCypherType) = {
+  private case class requireMaterialType(field: StdField, typ: MaterialCypherType) extends Verification {
     val materialType = field.cypherType.material
     ifNot(materialType `subTypeOf` typ isTrue) failWith {
-      CypherTypeError(s"Expected $typ, but got: $materialType")
+      FrameVerification.IsNoSubTypeOf(materialType, typ)
     }
   }
 
@@ -128,6 +127,4 @@ object Extract {
       // TODO: Make nice
       v.properties.getOrElse(propertyKey.name, null).asInstanceOf[AnyRef]
   }
-
-  protected[frame] final case class CypherTypeError(msg: String) extends FrameVerificationError(msg)
 }
