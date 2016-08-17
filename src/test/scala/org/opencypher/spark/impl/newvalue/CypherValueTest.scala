@@ -21,4 +21,10 @@ class CypherValueTest extends StdTestSuite {
     cypherNull[CypherInteger] match { case CypherNumber(n) => fail("Should not match") case null => }
     cypherNull[CypherNumber] match { case CypherNumber(n) => fail("Should not match") case null => }
   }
+
+  test("compares nulls and material values") {
+    (cypherNull == CypherInteger(2)) should be(false)
+    (cypherNull == cypherNull) should be(true)
+    (cypherFloat(2.5) == cypherNull) should be(false)
+  }
 }
