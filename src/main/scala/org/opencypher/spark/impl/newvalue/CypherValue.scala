@@ -107,6 +107,15 @@ object CypherValue {
     //      )
     //  }
   }
+
+  object orderability extends Ordering[CypherValue] {
+    override def compare(x: CypherValue, y: CypherValue): Int = (x, y) match {
+      case (a: CypherNumber, b: CypherNumber) => CypherNumber.orderability.compare(a, b)
+      case (null, null) => 0
+      case (null, _) => 1
+      case (_, null) => -1
+    }
+  }
 }
 
 sealed trait CypherValue extends AnyRef {
