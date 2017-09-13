@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.opencypher</groupId>
+        <artifactId>caps-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>caps-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Cypher for Apache Spark - Core</name>
+
+    <properties>
+        <!-- Used dependencies -->
+        <dep.graphframes.version>0.4.0-spark2.1-s_2.11</dep.graphframes.version>
+        <dep.hadoop.version>2.6.5</dep.hadoop.version>
+        <dep.junit.version>4.12</dep.junit.version>
+        <dep.neo4j-spark-connector>2.0.0-M2</dep.neo4j-spark-connector>
+        <dep.neo4j.version>3.3.0-SNAPSHOT</dep.neo4j.version>
+        <dep.netty.version>4.1.8.Final</dep.netty.version>
+        <dep.neo4j.driver.version>1.4.2</dep.neo4j.driver.version>
+        <dep.spark.version>2.2.0</dep.spark.version>
+    </properties>
+
+    <repositories>
+
+        <repository>
+            <id>SparkPackagesRepo</id>
+            <url>http://dl.bintray.com/spark-packages/maven</url>
+        </repository>
+
+        <repository>
+            <id>Neo4j snapshots</id>
+            <name>Neo4j snapshots repository</name>
+            <url>https://m2.neo4j.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+
+    </repositories>
+
+    <profiles>
+        <profile>
+            <id>skipShade</id>
+            <activation>
+                <property>
+                    <name>skipShade</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- shade plugin -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>${plugin.maven-shade.version}</version>
+                        <executions>
+                            <!-- run shade goal on package phase -->
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                                <configuration>
+                                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                                    <shadedClassifierName>standalone-shell</shadedClassifierName>
+                                    <createDependencyReducedPom>true</createDependencyReducedPom>
+                                    <artifactSet>
+                                        <excludes>
+                                            <exclude>junit:junit</exclude>
+                                            <exclude>jmock:*</exclude>
+                                            <exclude>org.scalatest:*</exclude>
+                                            <exclude>org.scalacheck:*</exclude>
+                                            <exclude>org.apache.maven:lib:tests</exclude>
+                                            <exclude>commons-beanutils:*</exclude>
+                                            <exclude>aopalliance:*</exclude>
+                                            <exclude>javax.inject:*</exclude>
+                                        </excludes>
+                                    </artifactSet>
+                                    <transformers>
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                            <mainClass>org.opencypher.caps.demo.Shell</mainClass>
+                                        </transformer>
+                                    </transformers>
+                                    <filters>
+
+                                        <filter>
+                                            <artifact>jline:jline</artifact>
+                                            <excludes>
+                                                <exclude>org/fusesource/hawtjni/runtime/Library.class</exclude>
+                                                <exclude>org/fusesource/hawtjni/runtime/PointerMath.class</exclude>
+                                                <exclude>org/fusesource/hawtjni/runtime/Callback.class</exclude>
+                                                <exclude>org/fusesource/hawtjni/runtime/JNIEnv.class</exclude>
+                                            </excludes>
+                                        </filter>
+
+                                        <filter>
+                                            <artifact>org.apache.spark:*</artifact>
+                                            <excludes>
+                                                <exclude>org/apache/spark/unused/UnusedStubClass.class</exclude>
+                                            </excludes>
+                                        </filter>
+
+                                        <filter>
+                                            <artifact>com.lihaoyi:ammonite-ops_2.11</artifact>
+                                            <excludes>
+                                                <exclude>ammonite/Constants.class</exclude>
+                                                <exclude>ammonite/Constants$.class</exclude>
+                                            </excludes>
+                                        </filter>
+
+                                        <filter>
+                                            <artifact>com.lihaoyi:ammonite-terminal_2.11</artifact>
+                                            <excludes>
+                                                <exclude>ammonite/Constants.class</exclude>
+                                                <exclude>ammonite/Constants$.class</exclude>
+                                            </excludes>
+                                        </filter>
+
+                                        <filter>
+                                            <artifact>org.apache.hadoop:hadoop-yarn-api</artifact>
+                                            <excludes>
+                                                <exclude>org/apache/hadoop/yarn/util/package-info.class</exclude>
+                                                <exclude>org/apache/hadoop/yarn/factories/package-info.class</exclude>
+                                                <exclude>org/apache/hadoop/yarn/factory/providers/package-info.class</exclude>
+                                            </excludes>
+                                        </filter>
+
+                                        <filter>
+                                            <artifact>*:*</artifact>
+                                            <excludes>
+                                                <exclude>META-INF/*.SF</exclude>
+                                                <exclude>META-INF/*.DSA</exclude>
+                                                <exclude>META-INF/*.RSA</exclude>
+                                            </excludes>
+                                        </filter>
+
+                                    </filters>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencies>
+
+        <!-- CAPS -->
+
+        <dependency>
+            <groupId>org.opencypher</groupId>
+            <artifactId>caps-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opencypher</groupId>
+            <artifactId>caps-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opencypher</groupId>
+            <artifactId>caps-ir</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opencypher</groupId>
+            <artifactId>caps-common</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opencypher</groupId>
+            <artifactId>caps-api</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Scala -->
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>cats_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.atnos</groupId>
+            <artifactId>eff_2.11</artifactId>
+        </dependency>
+
+        <!-- Tests -->
+
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
+
+        <!-- Neo4j -->
+
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-cypher-frontend-3.3</artifactId>
+            <version>${dep.neo4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>neo4j-contrib</groupId>
+            <artifactId>neo4j-spark-connector</artifactId>
+            <version>${dep.neo4j-spark-connector}</version>
+        </dependency>
+
+        <!-- Spark -->
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>${dep.spark.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>${dep.spark.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-catalyst_2.11</artifactId>
+            <version>${dep.spark.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>graphframes</groupId>
+            <artifactId>graphframes</artifactId>
+            <version>${dep.graphframes.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-graphx_2.11</artifactId>
+            <version>${dep.spark.version}</version>
+        </dependency>
+
+        <!-- Utils -->
+
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>ammonite_2.11.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>ammonite-ops_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.s1ck</groupId>
+            <artifactId>gdl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.nicolasstucki</groupId>
+            <artifactId>multisets_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>sourcecode_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-core_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-generic_2.11</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-parser_2.11</artifactId>
+        </dependency>
+
+        <!-- Tests -->
+
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-cypher-frontend-3.3</artifactId>
+            <version>${dep.neo4j.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j.test</groupId>
+            <artifactId>neo4j-harness</artifactId>
+            <version>${dep.neo4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bctls-jdk15on</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>${dep.netty.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+            <version>${dep.hadoop.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+</project>
