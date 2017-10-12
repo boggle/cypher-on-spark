@@ -41,14 +41,15 @@ trait CypherSession {
     */
   def emptyGraph: Graph
 
-  final def cypher(query: String): Result =
-    cypher(emptyGraph, query, Map.empty)
-
-  final def cypher(query: String, parameters: Map[String, CypherValue]): Result =
+  /**
+    * Execute the given cypher query with the given parameters using an empty, immutable graph as the ambient graph.
+    *
+    * @param query      the Cypher query to execute.
+    * @param parameters the parameters used by the Cypher query.
+    * @return the result of the query.
+    */
+  final def cypher(query: String, parameters: Map[String, CypherValue] = Map.empty): Result =
     cypher(emptyGraph, query, parameters)
-
-  final def cypher(graph: Graph, query: String): Result =
-    cypher(graph, query, Map.empty)
 
   /**
     * Executes a Cypher query in this session, using the argument graph as the ambient graph.

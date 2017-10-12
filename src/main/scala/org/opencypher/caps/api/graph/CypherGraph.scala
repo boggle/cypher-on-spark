@@ -31,7 +31,7 @@ import org.opencypher.caps.api.value.CypherValue
   *
   * @see [[https://github.com/opencypher/openCypher/blob/master/docs/property-graph-model.adoc openCypher Property Graph Model]]
   */
-trait CypherGraph {
+trait CypherGraph extends CypherQueryRunner {
 
   self =>
 
@@ -86,7 +86,7 @@ trait CypherGraph {
     * @return           the result of the query.
     * @see              [[CypherSession.cypher()]]
     */
-  final def cypher(query: String, parameters: Map[String, CypherValue] = Map.empty): Result =
+  final def cypher(query: String, parameters: Map[String, CypherValue]): Result =
     session.cypher(graph, query, parameters)
 
   // TODO: Add @throws declaration for session mismatch
